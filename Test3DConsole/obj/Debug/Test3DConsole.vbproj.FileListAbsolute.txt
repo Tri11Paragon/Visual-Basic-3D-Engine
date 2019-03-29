@@ -1,0 +1,13 @@
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\bin\Debug\Test3DConsole.exe.config
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\obj\Debug\Test3DConsole.vbprojResolveAssemblyReference.cache
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\obj\Debug\Test3DConsole.Resources.resources
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\obj\Debug\Test3DConsole.vbproj.GenerateResource.Cache
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\obj\Debug\Test3DConsole.xml
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\bin\Debug\Test3DConsole.exe
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\bin\Debug\Test3DConsole.pdb
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\bin\Debug\Test3DConsole.xml
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\bin\Debug\OpenTK.dll
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\bin\Debug\OpenTK.pdb
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\bin\Debug\OpenTK.xml
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\obj\Debug\Test3DConsole.exe
+H:\Documents\ICS3U1\Unit 1\Test3DConsole\Test3DConsole\obj\Debug\Test3DConsole.pdb
