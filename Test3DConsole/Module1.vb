@@ -310,6 +310,9 @@ End Class
 
 Public Class Loader
 
+    Dim vaos As ArrayList = New ArrayList()
+    Dim vbos As ArrayList = New ArrayList()
+    Dim textures As ArrayList = New ArrayList()
 
     Private Function decodeTextureFile(path As String) As TextureData
         Dim width As Integer = 0
@@ -326,8 +329,66 @@ Public Class Loader
         End Try
 
         Return New TextureData(buffer, width, height)
-
     End Function
+
+    Private Function storeDataInFloatBuffer(data As Single()) As BufferArray(Of Single)
+        Return New BufferArray(Of Single)(data)
+    End Function
+
+    Private Function storeDataInIntBuffer(data As Integer()) As BufferArray(Of Integer)
+        Return New BufferArray(Of Integer)(data)
+    End Function
+
+    Private Sub bindIndicesBuffer(data As Integer())
+        Dim vaoID As Int32 = GL.GenBuffer()
+        vaos.Add(vaoID)
+        GL.BindBuffer(BufferTarget.ElementArrayBuffer, vaoID)
+        GL.BufferData(BufferTarget.ElementArrayBuffer, data.Length, data, BufferUsageHint.StaticDraw)
+    End Sub
+
+    Private Sub unbindVAO()
+        GL.BindVertexArray(0)
+    End Sub
+
+    Private Sub storeDataInAttributeList(attributeNumber As Int32, data As Single())
+        Dim vboID As Integer = GL.GenBuffer()
+        vbos.Add(vboID)
+        GL.BindBuffer(BufferTarget.ArrayBuffer, vboID)
+        GL.BufferData(BufferTarget.ArrayBuffer, data.Length, data, BufferUsageHint.StaticDraw)
+        GL.VertexAttribPointer(attributeNumber, 3, VertexAttribPointerType.Float, False, 0, 0)
+        GL.BindBuffer(BufferTarget.ArrayBuffer, 0)
+    End Sub
+
+    Private Sub storeDataInAttributeList(attributeNumber As Int32, coordinateSize As Integer, data As Single())
+        Dim vboID As Integer = GL.GenBuffer()
+        vbos.Add(vboID)
+        GL.BindBuffer(BufferTarget.ArrayBuffer, vboID)
+        GL.BufferData(BufferTarget.ArrayBuffer, data.Length, data, BufferUsageHint.StaticDraw)
+        GL.VertexAttribPointer(attributeNumber, coordinateSize, VertexAttribPointerType.Float, False, 0, 0)
+        GL.BindBuffer(BufferTarget.ArrayBuffer, 0)
+    End Sub
+
+    Private Function createVAO() As Integer
+        Dim vaoID = GL.GenVertexArray()
+        vaos.Add(vaoID)
+        GL.BindVertexArray(vaoID)
+        Return vaoID
+    End Function
+
+    Public Sub cleanUp()
+        For num As Integer = 0 To vaos.Count
+            GL.DeleteVertexArray(num)
+        Next
+        For num As Integer = 0 To vbos.Count
+            GL.DeleteBuffer(num)
+        Next
+        For num As Integer = 0 To textures.Count
+            GL.DeleteTexture(num)
+        Next
+        vaos = Nothing
+        vbos = Nothing
+        textures = Nothing
+    End Sub
 
 End Class
 
