@@ -10,6 +10,7 @@ Imports Test3DConsole.models
 Imports System.Media
 Imports System.Windows
 Imports System.Drawing
+Imports System.Drawing.Imaging
 
 ' https://github.com/lefam/opengl_dot_net_experiments/tree/master/GLTexturedCube
 
@@ -306,13 +307,20 @@ Public Class Renderer
         GL.BindVertexArray(0)
     End Sub
 
+    Public Sub prepare()
+        GL.Enable(EnableCap.DepthTest)
+        GL.Clear(ClearBufferMask.ColorBufferBit)
+        GL.Clear(ClearBufferMask.DepthBufferBit)
+        GL.ClearColor(0, 0, 0, 1)
+    End Sub
+
 End Class
 
 Public Class Loader
 
     Dim vaos As ArrayList = New ArrayList()
     Dim vbos As ArrayList = New ArrayList()
-    Dim textures As ArrayList = New ArrayList()
+    Dim textures(100) As Integer
 
     Private Function decodeTextureFile(path As String) As TextureData
         Dim width As Integer = 0
@@ -389,6 +397,57 @@ Public Class Loader
         vbos = Nothing
         textures = Nothing
     End Sub
+
+    Protected Sub LoadTexture(ByVal textureId As Integer, ByVal filename As String)
+        Dim bmp As New Bitmap(filename)
+
+        Dim data As BitmapData = bmp.LockBits(New Rectangle(0, 0, bmp.Width, bmp.Height),
+                                                System.Drawing.Imaging.ImageLockMode.ReadOnly,
+                                                System.Drawing.Imaging.PixelFormat.Format32bppArgb)
+
+        GL.BindTexture(TextureTarget.Texture2D, textureId)
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
+                      bmp.Width, bmp.Height, 0, OpenGL.PixelFormat.Bgra,
+                      PixelType.UnsignedByte, data.Scan0)
+
+        bmp.UnlockBits(data)
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, TextureMinFilter.Linear)
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, TextureMagFilter.Linear)
+    End Sub
+
+    Public Function loadToVAO(positions As Single()) As RawModel
+        Dim vaoID As Integer = createVAO()
+        Me.storeDataInAttributeList(0, positions)
+        unbindVAO()
+        Return New RawModel(vaoID, positions.Length / 3)
+    End Function
+
+    Public Function loadToVAO(positions As Single(), modlename As String) As RawModel
+        Dim vaoID As Integer = createVAO()
+        Me.storeDataInAttributeList(0, 2, positions)
+        unbindVAO()
+        Return New RawModel(vaoID, positions.Length / 2, modlename)
+    End Function
+
+    Public Function loadToVAO(positions As Single(), textureCoords As Single(), normals As Single(), indices As Integer()) As RawModel
+        Dim vaoID As Integer = createVAO()
+        bindIndicesBuffer(indices)
+        Me.storeDataInAttributeList(0, 3, positions)
+        Me.storeDataInAttributeList(1, 2, textureCoords)
+        Me.storeDataInAttributeList(2, 3, normals)
+        unbindVAO()
+        Return New RawModel(vaoID, indices.Length)
+    End Function
+
+    Public Function loadToVAO(positions As Single(), textureCoords As Single(), normals As Single(), indices As Integer(), modelName As String) As RawModel
+        Dim vaoID As Integer = createVAO()
+        bindIndicesBuffer(indices)
+        Me.storeDataInAttributeList(0, 3, positions)
+        Me.storeDataInAttributeList(1, 2, textureCoords)
+        Me.storeDataInAttributeList(2, 3, normals)
+        unbindVAO()
+        Return New RawModel(vaoID, indices.Length, modelName)
+    End Function
 
 End Class
 
