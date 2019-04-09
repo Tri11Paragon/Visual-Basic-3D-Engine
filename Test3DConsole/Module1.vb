@@ -36,6 +36,9 @@ Public Class GlShadedCube
         MyBase.OnLoad(e)
         GL.ClearColor(0.274, 0.874, 0.945, 0)
         GL.Enable(EnableCap.DepthTest)
+
+        Maths.setWidth(Me.Width)
+        Maths.setHeight(Me.Height)
     End Sub
 
     Protected Overrides Sub OnClosed(e As EventArgs)
@@ -46,10 +49,13 @@ Public Class GlShadedCube
     Protected Overrides Sub OnResize(ByVal e As System.EventArgs)
         MyBase.OnResize(e)
 
+        Maths.setWidth(Me.Width)
+        Maths.setHeight(Me.Height)
+
         GL.Viewport(0, 0, Me.Width, Me.Height)
 
         Dim aspect As Single = CSng(Me.Width) / Me.Height
-        Dim projMat As Matrix4 = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspect, 0.1, 100.0)
+        Dim projMat As Matrix4d = Matrix4d.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspect, 0.1, 100.0)
 
         GL.MatrixMode(MatrixMode.Projection)
         GL.LoadMatrix(projMat)
@@ -167,15 +173,15 @@ Public Class StaticShader
         location_viewMatrix = MyBase.getUniformLocation("viewMatrix")
     End Sub
 
-    Public Sub loadTransformationMatrix(matrix As Matrix4)
+    Public Sub loadTransformationMatrix(matrix As Matrix4d)
         MyBase.loadMatrix(location_transformationMatrix, matrix)
     End Sub
 
-    Public Sub loadProjectionMatrix(matrix As Matrix4)
+    Public Sub loadProjectionMatrix(matrix As Matrix4d)
         MyBase.loadMatrix(location_projectionMatrix, matrix)
     End Sub
 
-    Public Sub loadViewMatrix(matrix As Matrix4)
+    Public Sub loadViewMatrix(matrix As Matrix4d)
         MyBase.loadMatrix(location_viewMatrix, matrix)
     End Sub
 
@@ -242,7 +248,7 @@ Public Class shaderProgram
         GL.Uniform1(location, value)
     End Sub
 
-    Protected Sub loadVector(location As Integer, value As Vector3)
+    Protected Sub loadVector(location As Integer, value As Vector3d)
         GL.Uniform3(location, value.X, value.Y, value.Z)
     End Sub
 
@@ -255,7 +261,7 @@ Public Class shaderProgram
         GL.Uniform1(location, id)
     End Sub
 
-    Protected Sub loadMatrix(location As Integer, maxtrix As Matrix4)
+    Protected Sub loadMatrix(location As Integer, maxtrix As Matrix4d)
         GL.UniformMatrix4(location, False, maxtrix)
     End Sub
 
@@ -297,24 +303,108 @@ Public Class shaderProgram
 End Class
 
 
-Public Class Renderer
+Public Class EntityRenderer
+    Dim shader As New StaticShader
 
-    Public Sub render(model As RawModel)
-        GL.BindVertexArray(model.getVaoID)
+    Public Sub New(shader As StaticShader, projectionMatrix As Matrix4d)
+        Me.shader = shader
+        shader.start()
+        shader.loadProjectionMatrix(projectionMatrix)
+        shader.stop_()
+    End Sub
+
+    Public Sub render(entitys As List(Of Entity))
+        For Each entity As Entity In entitys
+            prepareTexturedModel(entity.getModel())
+            prepareInstance(entity)
+            GL.DrawElements(BeginMode.Triangles, entity.getModel.getRawModel.getVertexCount(), DrawElementsType.UnsignedInt, 0)
+            unbindTexturedModel()
+        Next
+
+    End Sub
+
+    Private Sub prepareTexturedModel(ByVal model As TexturedModel)
+        Dim rawModel As RawModel = model.getRawModel()
+        GL.BindVertexArray(rawModel.getVaoID())
         GL.EnableVertexAttribArray(0)
-        GL.DrawArrays(PrimitiveType.Triangles, 0, model.getVertexCount())
+        GL.EnableVertexAttribArray(1)
+        GL.EnableVertexAttribArray(2)
+        Dim texture As ModelTexture = model.getTexture()
+        'shader.loadShineVariables(texture.getShineDamper(), texture.getReflectivity())
+        GL.ActiveTexture(TextureUnit.Texture0)
+        GL.BindTexture(TextureTarget.Texture2D, model.getTexture.getTextureID())
+    End Sub
+
+    Private Sub unbindTexturedModel()
         GL.DisableVertexAttribArray(0)
+        GL.DisableVertexAttribArray(1)
+        GL.DisableVertexAttribArray(2)
         GL.BindVertexArray(0)
+    End Sub
+
+    Private Sub prepareInstance(ByVal entity As Entity)
+        Dim transformationMatrix As Matrix4d = Maths.createTransformationMatrix(entity.getPosition(), entity.getRotX(), entity.getRotY(), entity.getRotZ(), entity.getScale())
+        shader.loadTransformationMatrix(transformationMatrix)
+    End Sub
+
+End Class
+
+Public Class MasterRenderer
+
+    Private Shared FOV As Single = 70
+    Private Shared NEAR_PLANE As Single = 0.1F
+    Private Shared FAR_PLANE As Single = 875
+
+    Private projectionMatrix As Matrix4d
+    Private shader As StaticShader = New StaticShader()
+    Private renderer As EntityRenderer
+    Private entities As List(Of Entity)
+
+    Public Sub New(ByVal loader As Loader)
+        GL.Enable(EnableCap.CullFace)
+        GL.CullFace(CullFaceMode.Back)
+        createProjectionMatrix()
+        renderer = New EntityRenderer(shader, projectionMatrix)
+    End Sub
+
+    Public Sub render(ByVal player As Player)
+        prepare()
+        shader.start()
+        shader.loadViewMatrix(Maths.createViewMatrix(player.getPosition.X, player.getPosition.Y, player.getPosition.Z))
+        renderer.render(entities)
+        shader.stop_()
+        entities.clear()
+    End Sub
+
+    Public Sub processEntity(ByVal entity As Entity)
+        entities.Add(entity)
+    End Sub
+
+    Public Sub cleanUp()
+        shader.cleanup()
     End Sub
 
     Public Sub prepare()
         GL.Enable(EnableCap.DepthTest)
-        GL.Clear(ClearBufferMask.ColorBufferBit)
-        GL.Clear(ClearBufferMask.DepthBufferBit)
+        GL.Clear(ClearBuffer.Color Or ClearBuffer.Depth)
         GL.ClearColor(0, 0, 0, 1)
     End Sub
 
+    Private Sub createProjectionMatrix()
+        Dim aspectRatio As Single = Maths.getWidth() / Maths.getHeight()
+        Dim y_scale As Single = CSng(((1.0F / Math.Tan(Maths.DegreesToRadians(FOV / 2.0F))) * aspectRatio))
+        Dim x_scale As Single = y_scale / aspectRatio
+        Dim frustum_length As Single = FAR_PLANE - NEAR_PLANE
+        projectionMatrix = New Matrix4d()
+        projectionMatrix.Row0.X = x_scale
+        projectionMatrix.M11 = y_scale
+        projectionMatrix.M22 = -((FAR_PLANE + NEAR_PLANE) / frustum_length)
+        projectionMatrix.M23 = -1
+        projectionMatrix.M32 = -((2 * NEAR_PLANE * FAR_PLANE) / frustum_length)
+        projectionMatrix.M33 = 0
+    End Sub
 End Class
+
 
 Public Class Loader
 
