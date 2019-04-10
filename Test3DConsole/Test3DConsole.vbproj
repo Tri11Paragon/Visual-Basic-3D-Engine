@@ -134,6 +134,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\texture.png" />
     <Content Include="shader\fragmentShader.txt" />
     <Content Include="shader\vertexShader.txt" />
   </ItemGroup>

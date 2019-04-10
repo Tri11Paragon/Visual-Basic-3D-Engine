@@ -27,6 +27,15 @@ Public Class GlShadedCube
     Inherits GameWindow
 
     Protected angle As Single
+    Dim loader As Loader = New Loader()
+    Dim masterRenderer As MasterRenderer = New MasterRenderer(Loader)
+    Dim player As Player = New Player(Nothing, Nothing, New Vector3(0, 0, 0))
+
+    Dim vertices As Single() = {0.5F, -0.5F, 0, 0.5F, 0.5F, 0, -0.5F, 0.5F, 0, -0.5F, -0.5F, 0}
+    Dim indices As Integer() = {0, 1, 3, 3, 1, 2}
+    Dim textureCoords As Single() = {0.0F, 1.0F, 0.0F, 0.0F, 1.0F, 0.0F, 1.0F, 1.0F}
+    Dim normals As Single() = {1.0F, 0.0000F, 0.0000F, 1.0F, 0.0000F, 0.0000F}
+    Dim model As RawModel
 
     Public Sub New()
         MyBase.New(320, 240, GraphicsMode.Default, "First touch with OpenTK")
@@ -39,11 +48,17 @@ Public Class GlShadedCube
 
         Maths.setWidth(Me.Width)
         Maths.setHeight(Me.Height)
+
+        model = loader.loadToVAO(vertices, textureCoords, normals, indices)
+
+
+        masterRenderer.processEntity(New Entity(New TexturedModel(model, loader.LoadTexture(loader.textures(0), My.Resources.texture)), New Vector3(0, 0, -10), 0, 0, 0, 50))
     End Sub
 
     Protected Overrides Sub OnClosed(e As EventArgs)
         MyBase.OnClosed(e)
-
+        masterRenderer.cleanUp()
+        loader.cleanUp()
     End Sub
 
     Protected Overrides Sub OnResize(ByVal e As System.EventArgs)
@@ -54,7 +69,7 @@ Public Class GlShadedCube
 
         GL.Viewport(0, 0, Me.Width, Me.Height)
 
-        Dim aspect As Single = CSng(Me.Width) / Me.Height
+        Dim aspect As Single = CSng(Maths.getWidth()) / Maths.getHeight()
         Dim projMat As Matrix4d = Matrix4d.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspect, 0.1, 100.0)
 
         GL.MatrixMode(MatrixMode.Projection)
@@ -66,81 +81,86 @@ Public Class GlShadedCube
 
     Protected Overrides Sub OnRenderFrame(ByVal e As OpenTK.FrameEventArgs)
         MyBase.OnRenderFrame(e)
-        GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
+        'GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
 
-        GL.LoadIdentity()
-        GL.Translate(0, 0, -5)
-        GL.Rotate(angle, 0, 1, 1)
+        'GL.LoadIdentity()
+        'GL.Translate(0, 0, -5)
+        'GL.Rotate(angle, 0, 1, 1)
         'GL.Rotate(angle, 0, 1, 0)
-        GL.Rotate(angle, 1, 0, 0)
-        GL.Rotate(angle, 0, 1, 0)
-        GL.Rotate(angle, 0, 0, 1)
+        'GL.Rotate(angle, 1, 0, 0)
+        'GL.Rotate(angle, 0, 1, 0)
+        'GL.Rotate(angle, 0, 0, 1)
 
-        angle += 1
+        'angle += 1
 
-        GL.Begin(BeginMode.Quads)
+        'GL.Begin(BeginMode.Quads)
 
         ' Front face 
-        GL.Color3(1.0, 0.0, 0.0)
-        GL.Vertex3(-1, 1, 1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(1, 1, 1)
-        GL.Color3(0.0, 0.0, 0.7)
-        GL.Vertex3(1, -1, 1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(-1, -1, 1)
+        'GL.Color3(1.0, 0.0, 0.0)
+        'GL.Vertex3(-1, 1, 1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(1, 1, 1)
+        'GL.Color3(0.0, 0.0, 0.7)
+        'GL.Vertex3(1, -1, 1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(-1, -1, 1)
 
         ' Back face
-        GL.Color3(1.0, 0.0, 0.0)
-        GL.Vertex3(1, 1, -1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(-1, 1, -1)
-        GL.Color3(0.0, 0.0, 0.7)
-        GL.Vertex3(-1, -1, -1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(1, -1, -1)
+        'GL.Color3(1.0, 0.0, 0.0)
+        'GL.Vertex3(1, 1, -1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(-1, 1, -1)
+        'GL.Color3(0.0, 0.0, 0.7)
+        'GL.Vertex3(-1, -1, -1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(1, -1, -1)
 
         ' Right face
-        GL.Color3(1.0, 0.0, 0.0)
-        GL.Vertex3(1, 1, -1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(1, 1, 1)
-        GL.Color3(0.0, 0.0, 0.7)
-        GL.Vertex3(1, -1, 1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(1, -1, -1)
+        'GL.Color3(1.0, 0.0, 0.0)
+        'GL.Vertex3(1, 1, -1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(1, 1, 1)
+        'GL.Color3(0.0, 0.0, 0.7)
+        'GL.Vertex3(1, -1, 1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(1, -1, -1)
 
         ' Left face
-        GL.Color3(1.0, 0.0, 0.0)
-        GL.Vertex3(-1, 1, -1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(-1, 1, 1)
-        GL.Color3(0.0, 0.0, 0.7)
-        GL.Vertex3(-1, -1, 1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(-1, -1, -1)
+        'GL.Color3(1.0, 0.0, 0.0)
+        'GL.Vertex3(-1, 1, -1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(-1, 1, 1)
+        'GL.Color3(0.0, 0.0, 0.7)
+        'GL.Vertex3(-1, -1, 1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(-1, -1, -1)
 
         ' Top face
-        GL.Color3(1.0, 0.0, 0.0)
-        GL.Vertex3(-1, 1, 1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(-1, 1, -1)
-        GL.Color3(0.0, 0.0, 0.7)
-        GL.Vertex3(1, 1, -1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(1, 1, 1)
+        'GL.Color3(1.0, 0.0, 0.0)
+        'GL.Vertex3(-1, 1, 1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(-1, 1, -1)
+        'GL.Color3(0.0, 0.0, 0.7)
+        'GL.Vertex3(1, 1, -1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(1, 1, 1)
 
         ' Bottom face
-        GL.Color3(1.0, 0.0, 0.0)
-        GL.Vertex3(-1, -1, 1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(1, -1, 1)
-        GL.Color3(0.0, 0.0, 0.7)
-        GL.Vertex3(1, -1, -1)
-        GL.Color3(0.0, 1.0, 0.0)
-        GL.Vertex3(-1, -1, -1)
+        'GL.Color3(1.0, 0.0, 0.0)
+        'GL.Vertex3(-1, -1, 1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(1, -1, 1)
+        'GL.Color3(0.0, 0.0, 0.7)
+        'GL.Vertex3(1, -1, -1)
+        'GL.Color3(0.0, 1.0, 0.0)
+        'GL.Vertex3(-1, -1, -1)
 
-        GL.End()
+        'GL.End()
+
+
+        masterRenderer.prepare()
+        masterRenderer.render(player)
+
 
         SwapBuffers()
     End Sub
@@ -158,7 +178,7 @@ Public Class StaticShader
     Private Const FRAGMENT_FILE As String = "shader/fragmentShader.txt"
 
     Public Sub New()
-        MyBase.New(VERTEX_FILE, FRAGMENT_FILE)
+        MyBase.New(My.Resources.vertexShader, My.Resources.fragmentShader, 0)
     End Sub
 
     Protected Overrides Sub bindAttributes()
@@ -198,6 +218,18 @@ Public Class shaderProgram
     Public Sub New(vertexFile As String, fragmentFile As String)
         vertexShaderID = loadShader(vertexFile, ShaderType.VertexShader)
         fragmentShaderID = loadShader(fragmentFile, ShaderType.FragmentShader)
+        programID = GL.CreateProgram()
+        GL.AttachShader(programID, vertexShaderID)
+        GL.AttachShader(programID, fragmentShaderID)
+        bindAttributes()
+        GL.LinkProgram(programID)
+        GL.ValidateProgram(programID)
+        getAllUniformLocations()
+    End Sub
+
+    Public Sub New(vertexData As String, fragmentData As String, ad As Int16)
+        vertexShaderID = loadShader(vertexData, ShaderType.VertexShader, 0)
+        fragmentShaderID = loadShader(fragmentData, ShaderType.FragmentShader, 0)
         programID = GL.CreateProgram()
         GL.AttachShader(programID, vertexShaderID)
         GL.AttachShader(programID, fragmentShaderID)
@@ -292,9 +324,22 @@ Public Class shaderProgram
         GL.ShaderSource(shaderID, shaderSource.ToString)
         GL.CompileShader(shaderID)
 
-        Dim params As Integer
-        GL.GetShader(shaderID, ShaderParameter.CompileStatus, params)
-        Console.WriteLine("Shader Compile Code: " + params)
+        'Dim params
+        'GL.GetShader(shaderID, ShaderParameter.CompileStatus, params)
+        'Console.WriteLine("Shader Compile Code: " + params)
+
+        Return shaderID
+
+    End Function
+
+    Private Function loadShader(shaderData As String, type As ShaderType, d As Int16) As Integer
+        Dim shaderID = GL.CreateShader(type)
+        GL.ShaderSource(shaderID, shaderData)
+        GL.CompileShader(shaderID)
+
+        'Dim params
+        'GL.GetShader(shaderID, ShaderParameter.CompileStatus, params)
+        'Console.WriteLine("Shader Compile Code: " + params)
 
         Return shaderID
 
@@ -358,7 +403,7 @@ Public Class MasterRenderer
     Private projectionMatrix As Matrix4d
     Private shader As StaticShader = New StaticShader()
     Private renderer As EntityRenderer
-    Private entities As List(Of Entity)
+    Private entities As List(Of Entity) = New List(Of Entity)
 
     Public Sub New(ByVal loader As Loader)
         GL.Enable(EnableCap.CullFace)
@@ -370,7 +415,9 @@ Public Class MasterRenderer
     Public Sub render(ByVal player As Player)
         prepare()
         shader.start()
-        shader.loadViewMatrix(Maths.createViewMatrix(player.getPosition.X, player.getPosition.Y, player.getPosition.Z))
+        Dim aspect As Single = CSng(Maths.getWidth()) / Maths.getHeight()
+        Dim projMat As Matrix4d = Matrix4d.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspect, 0.1, 100.0)
+        shader.loadViewMatrix(projMat)
         renderer.render(entities)
         shader.stop_()
         entities.clear()
@@ -410,7 +457,7 @@ Public Class Loader
 
     Dim vaos As ArrayList = New ArrayList()
     Dim vbos As ArrayList = New ArrayList()
-    Dim textures(100) As Integer
+    Public textures(100) As Integer
 
     Private Function decodeTextureFile(path As String) As TextureData
         Dim width As Integer = 0
@@ -488,7 +535,7 @@ Public Class Loader
         textures = Nothing
     End Sub
 
-    Protected Sub LoadTexture(ByVal textureId As Integer, ByVal filename As String)
+    Public Function LoadTexture(ByVal textureId As Integer, ByVal filename As String) As ModelTexture
         Dim bmp As New Bitmap(filename)
 
         Dim data As BitmapData = bmp.LockBits(New Rectangle(0, 0, bmp.Width, bmp.Height),
@@ -503,7 +550,25 @@ Public Class Loader
         bmp.UnlockBits(data)
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, TextureMinFilter.Linear)
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, TextureMagFilter.Linear)
-    End Sub
+        Return New ModelTexture(textureId, filename)
+    End Function
+
+    Public Function LoadTexture(ByVal textureId As Integer, ByVal bmp As Bitmap) As ModelTexture
+
+        Dim data As BitmapData = bmp.LockBits(New Rectangle(0, 0, bmp.Width, bmp.Height),
+                                                System.Drawing.Imaging.ImageLockMode.ReadOnly,
+                                                System.Drawing.Imaging.PixelFormat.Format32bppArgb)
+
+        GL.BindTexture(TextureTarget.Texture2D, textureId)
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
+                      bmp.Width, bmp.Height, 0, OpenGL.PixelFormat.Bgra,
+                      PixelType.UnsignedByte, data.Scan0)
+
+        bmp.UnlockBits(data)
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, TextureMinFilter.Linear)
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, TextureMagFilter.Linear)
+        Return New ModelTexture(textureId, "")
+    End Function
 
     Public Function loadToVAO(positions As Single()) As RawModel
         Dim vaoID As Integer = createVAO()
